@@ -12,8 +12,8 @@ Read the code to understand more about how it works.
 
 ## INSTALL
 
-git clone https://github.com/imerso/babylonjs_template.git  
-cd babylonjs_etherea  
+git clone https://github.com/imerso/bjs_floating_origin.git  
+cd bjs_floating_origin  
 npm install
 
 ## BUILD DEV AND WATCH FOR CHANGES
