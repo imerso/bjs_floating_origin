@@ -26,7 +26,7 @@ import { Entity } from './etherea/entity';
 // them enabled and render at a lower resolution
 // to compensate.
 //
-let USE_DEBUG_LAYER: boolean = false;              // enable debug inspector?
+let USE_DEBUG_LAYER: boolean = true;              // enable debug inspector?
 let USE_CUSTOM_LOADINGSCREEN: boolean = false;    // enable custom loading screen?
 let HW_SCALE_NORMAL: float = 1;                  // scale in non-vr mode
 let HW_SCALE_VR: float = 1;                      // scale in vr mode
@@ -125,6 +125,7 @@ export class Game {
         cam1.keysDownward.push(81);     // Q
         cam1.minZ = 1;
         cam1.maxZ = 1024*1024;
+        cam1.fov = 1;
         cam1.attachControl(this._canvas, true);
         this._cameras.push(cam1);
     }
@@ -266,7 +267,7 @@ export class Game {
 
                         for (let i = 0; i < 360; i += 15) {
                             // entity for one region
-                            let ent = new Entity("ent" + i, main._scene);
+                            let ent = new Entity("ent" + (i+2), main._scene);
 
                             // calculate the angle for the region
                             let ang = i * Math.PI / 180;
@@ -281,7 +282,7 @@ export class Game {
                                 inst.parent = ent;
                                 let s = 1 + Math.random() * 16;
                                 inst.scaling.set(s, s, s);
-                                inst.rotation.set(Math.random()*180, Math.random()*180, Math.random()*180);
+                                inst.rotation = new BABYLON.Vector3(Math.random()*180, Math.random()*180, Math.random()*180);
                                 inst.position.set(-6000 + Math.random() * 12000, -4000 + Math.random() * 8000, -6000 + Math.random() * 12000);
                             }
                         }
