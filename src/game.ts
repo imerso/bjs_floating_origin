@@ -111,7 +111,7 @@ export class Game {
         // initialize cameras array
         this._cameras = new Array<OriginCamera>();
 
-        let camPos = this._hangarPos.add(new BABYLON.Vector3(1, 1.7, 0));
+        let camPos = this._hangarPos.add(new BABYLON.Vector3(1, 1.1, 0));
         let cam1 = new OriginCamera("cam1", camPos, this._scene);
         cam1.doubletgt = camPos.add(new BABYLON.Vector3(-100, 0, -30));
         cam1.touchAngularSensibility = 10000;
@@ -254,9 +254,7 @@ export class Game {
                         // that are far apart, then we add some cubes to
                         // that same Entity before moving to a new one.
                         let asteroid = ast_meshes[0].getChildMeshes()[0] as BABYLON.Mesh; //BABYLON.CreateSphere("asteroid", {segments:3, diameter:2});
-                        //let positions = asteroid.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-                        //for (let i=0; i<positions.length; i++) positions[i] *= 1 + Math.random();
-                        //asteroid.setVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+                        asteroid.parent = null;
                         let astMat = new BABYLON.StandardMaterial("ast", main._scene);
                         astMat.diffuseTexture = new BABYLON.Texture("./assets/tex/asteroid.jpg", main._scene);
                         (astMat.diffuseTexture as BABYLON.Texture).uScale = (astMat.diffuseTexture as BABYLON.Texture).vScale = 4;
@@ -283,7 +281,7 @@ export class Game {
                                 inst.parent = ent;
                                 let s = 1 + Math.random() * 16;
                                 inst.scaling.set(s, s, s);
-                                inst.rotation.set(s, s, s);
+                                inst.rotation.set(Math.random()*180, Math.random()*180, Math.random()*180);
                                 inst.position.set(-6000 + Math.random() * 12000, -4000 + Math.random() * 8000, -6000 + Math.random() * 12000);
                             }
                         }
@@ -295,7 +293,6 @@ export class Game {
 
                         // look at hangar on space press
                         main._canvas.addEventListener("keydown", function(e) {
-                            console.log("Key [" + e.key + "]");
                             if (e.key === " ") main._cameras[0].doubletgt = ent0.doublepos ;
                         });
 
