@@ -218,7 +218,7 @@ export class Game {
 
                 // create some lights
                 main._light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), main._scene);
-                main._light1.intensity = 0.75;
+                main._light1.intensity = 0.3;
                 main._light1.specular = BABYLON.Color3.White();
 
                 // create shadows generator
