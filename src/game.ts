@@ -26,13 +26,13 @@ import { Entity } from './etherea/entity';
 // them enabled and render at a lower resolution
 // to compensate.
 //
-let USE_DEBUG_LAYER: boolean = true;              // enable debug inspector?
+let USE_DEBUG_LAYER: boolean = false;              // enable debug inspector?
 let USE_CUSTOM_LOADINGSCREEN: boolean = false;    // enable custom loading screen?
 let HW_SCALE_NORMAL: float = 1;                  // scale in non-vr mode
 let HW_SCALE_VR: float = 1;                      // scale in vr mode
 let USE_ANTIALIAS: boolean = true;               // enable antialias?
-let USE_HDR: boolean = false;                     // enable hdr?
-let USE_GLOW: boolean = true;                    // enable glow?
+let USE_HDR: boolean = true;                     // enable hdr?
+let USE_GLOW: boolean = false;                    // enable glow?
 let USE_SHADOWS: boolean = false;                 // enable shadows?
 // ======================================
 
@@ -78,7 +78,8 @@ export class Game {
     private _shadowgen: BABYLON.ShadowGenerator;
     private _xrhelper: BABYLON.WebXRDefaultExperience;
     private _grounds: BABYLON.AbstractMesh[] = new Array<BABYLON.AbstractMesh>();
-    private _hangarPos: BABYLON.Vector3 = new BABYLON.Vector3(33500, 100, 0);
+    private _planetPos: BABYLON.Vector3 = new BABYLON.Vector3(0, 0, 128000);
+    private _hangarPos: BABYLON.Vector3 = this._planetPos.add(new BABYLON.Vector3(33500, 100, 0));
 
 
     // Initialization, gets canvas and creates engine
@@ -123,8 +124,8 @@ export class Game {
         cam1.keysRight.push(68); 		// S
         cam1.keysUpward.push(69);		// E
         cam1.keysDownward.push(81);     // Q
-        cam1.minZ = 1;
-        cam1.maxZ = 1024*1024;
+        cam1.minZ = 0.5;
+        cam1.maxZ = 50000000;
         cam1.fov = 1;
         cam1.attachControl(this._canvas, true);
         this._cameras.push(cam1);
@@ -191,11 +192,19 @@ export class Game {
 
                     // you can also add effects to the pipeline
                     // bloom, for example:
-                    //pipeline.bloomEnabled = true;
-                    //pipeline.bloomThreshold = 0.4;
-                    //pipeline.bloomWeight = 0.8;
-                    //pipeline.bloomKernel = 64;
-                    //pipeline.bloomScale = 0.5;
+                    pipeline.bloomEnabled = true;
+                    pipeline.bloomThreshold = 0.65;
+                    pipeline.bloomWeight = 0.25;
+                    pipeline.bloomKernel = 128;
+                    pipeline.bloomScale = 0.5;
+
+                    pipeline.chromaticAberrationEnabled = false;
+                    pipeline.glowLayerEnabled = true;
+
+                    let tonemap = new BABYLON.TonemapPostProcess("tmap", BABYLON.TonemappingOperator.Reinhard, 3., main._cameras[0]);
+                    //let ssao = new BABYLON.SSAORenderingPipeline('ssaopipeline', main._scene, 0.75);
+                    //let motion = new BABYLON.MotionBlurPostProcess("mblur", main._scene, 1.0, main._cameras[0]);
+                    //motion.motionStrength = 1;
                 }
 
                 // enable glow
@@ -213,12 +222,25 @@ export class Game {
                 main._light1.specular = BABYLON.Color3.White();
 
                 // create shadows generator
-                main._light2 = new BABYLON.DirectionalLight("light2", new BABYLON.Vector3(0.6, -0.35, 0.85), main._scene);
+                let sunDir = main._planetPos.clone();
+                sunDir.normalize();
+                main._light2 = new BABYLON.DirectionalLight("light2", sunDir, main._scene);
                 if (USE_SHADOWS) {
                     main._shadowgen = new BABYLON.ShadowGenerator(1024, main._light2);
                     main._shadowgen.useBlurExponentialShadowMap = true;
                     main._shadowgen.blurKernel = 32;
                 }
+
+                // space skybox
+                let skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:2048000}, main._scene);
+                let skyboxMaterial = new BABYLON.StandardMaterial("skyBox", main._scene);
+                skyboxMaterial.backFaceCulling = false;
+                skyboxMaterial.disableLighting = true;
+                skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("./assets/tex/sky01/sky01", main._scene);
+                skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+                skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+                skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+                skybox.material = skyboxMaterial;			
 
                 // ==========================================
 
@@ -226,21 +248,44 @@ export class Game {
 
                     BABYLON.SceneLoader.ImportMesh("", "assets/models/", "hangar.glb", main._scene, async function (hangar_meshes, hangar_particles, hangar_skeletons) {
 
+                        // Sun is located at world's origin
+                        let entSun = new Entity("entSun", main._scene);
+                        main._cameras[0].add(entSun);
+                        let sun = BABYLON.CreateSphere("sun", {diameter:2048});
+                        sun.parent = entSun;
+                        let sunMat = new BABYLON.StandardMaterial("sun", main._scene);
+                        sunMat.diffuseColor = BABYLON.Color3.Yellow();
+                        sunMat.emissiveColor = BABYLON.Color3.Yellow();
+                        sun.material = sunMat;
+                        let sunBill = BABYLON.CreatePlane("sunBill", {size:64000});
+                        sunBill.parent = entSun;
+                        sunBill.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+                        let sunBillMat = new BABYLON.StandardMaterial("sun", main._scene);
+                        sunBillMat.disableLighting = true;
+                        sunBillMat.emissiveTexture = new BABYLON.Texture("./assets/tex/star_glow1.png", main._scene);
+                        sunBillMat.opacityTexture = sunBillMat.emissiveTexture;
+                        sunBillMat.opacityTexture.getAlphaFromRGB = true;
+                        sunBillMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+                        sunBillMat.alphaMode = BABYLON.Engine.ALPHA_ADD;
+                        sunBillMat.disableDepthWrite = true;
+                        sunBill.material = sunBillMat;
+
                         // Create an entity for the hangar
-                        let ent0 = new Entity("ent0", main._scene);
-                        main._cameras[0].add(ent0);
-                        ent0.doublepos.copyFrom(main._hangarPos);
-                        hangar_meshes[0].parent = ent0;
+                        let entHangar = new Entity("entHangar", main._scene);
+                        main._cameras[0].add(entHangar);
+                        entHangar.doublepos = main._hangarPos;
+                        hangar_meshes[0].parent = entHangar;
 
                         // Create a floating-origin Entity
                         // for a big sphere which mimics a planet;
                         // notice that we add the Entity to the OriginCamera,
                         // and make the sphere parent of this Entity
                         // for it to be updated every frame.
-                        let ent1 = new Entity("ent1", main._scene);
-                        main._cameras[0].add(ent1);
+                        let entPlanet = new Entity("entPlanet", main._scene);
+                        entPlanet.doublepos = main._planetPos;
+                        main._cameras[0].add(entPlanet);
                         let sphere = BABYLON.CreateSphere("sph", {diameter:32768});
-                        sphere.parent = ent1;
+                        sphere.parent = entPlanet;
                         let sphMat = new BABYLON.StandardMaterial("sph", main._scene);
                         sphMat.diffuseTexture = new BABYLON.Texture("./assets/tex/saturn.jpg", main._scene);
                         sphMat.specularPower = .5;
@@ -273,7 +318,7 @@ export class Game {
                             let ang = i * Math.PI / 180;
 
                             // position the entity at that region
-                            ent.doublepos.set(33000 * Math.sin(ang), 0, 33000 * Math.cos(ang));
+                            ent.doublepos.set(entPlanet.doublepos.x + 33000 * Math.sin(ang), entPlanet.doublepos.y, entPlanet.doublepos.z + 33000 * Math.cos(ang));
                             main._cameras[0].add(ent);
 
                             // add some cubes to that entity
@@ -287,6 +332,28 @@ export class Game {
                             }
                         }
 
+                        //main._scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
+                        //main._scene.fogDensity = 0.00006;
+                        //main._scene.fogColor = BABYLON.Color3.Black();
+
+                        // volumetric light
+                        //let vls = new BABYLON.VolumetricLightScatteringPostProcess("vls", 1.0, main._cameras[0], sun, 8, BABYLON.Texture.BILINEAR_SAMPLINGMODE, main._engine, false);
+
+                        // lens flares
+                        //let lensFlareSystem = new BABYLON.LensFlareSystem("lensFlareSystem", sun, main._scene);
+                        //let flare1 = new BABYLON.LensFlare(0.5, 0.15, new BABYLON.Color3(1, 1, 1), "assets/tex/star_glow1.png", lensFlareSystem);
+
+                        // set logarithmic zbuffer to
+                        // all materials in scene
+                        main._scene.meshes.forEach(function(m)
+                        {
+                            if (m.material)
+                            {
+                                (m.material as BABYLON.StandardMaterial).useLogarithmicDepth = true;
+                                console.log(m.name + " using logarithmic zbuffer");
+                            }
+                        });
+
                         // change camera speed on mousewheel
                         main._canvas.addEventListener("wheel", function(e) {
                             main._cameras[0].speed = Math.min(1000, Math.max(1, main._cameras[0].speed += e.deltaY * 0.1));
@@ -294,7 +361,7 @@ export class Game {
 
                         // look at hangar on space press
                         main._canvas.addEventListener("keydown", function(e) {
-                            if (e.key === " ") main._cameras[0].doubletgt = ent0.doublepos ;
+                            if (e.key === " ") main._cameras[0].doubletgt = entHangar.doublepos ;
                         });
 
                         // ==========================================
