@@ -15,11 +15,9 @@
 import * as BABYLON from 'babylonjs';
 import { OriginCamera } from './origin_camera';
 
-class EntityNode {
-    private _pos: BABYLON.Vector3;
-}
-
+// Out floating-origin Entity
 export class Entity extends BABYLON.TransformNode {
+    // you must use the doublepos property instead of position directly
     private _doublepos: BABYLON.Vector3 = new BABYLON.Vector3();
     public get doublepos() { return this._doublepos; }
     public set doublepos(pos: BABYLON.Vector3) { this._doublepos.copyFrom(pos); }
@@ -28,6 +26,7 @@ export class Entity extends BABYLON.TransformNode {
         super(name, scene);
     }
 
+    // This is called automatically by OriginCamera
     public update(cam: OriginCamera): void {
         this.position = this.doublepos.subtract(cam.doublepos);
     }

@@ -251,15 +251,24 @@ export class Game {
 
                     BABYLON.SceneLoader.ImportMesh("", "assets/models/", "hangar.glb", main._scene, async function (hangar_meshes, hangar_particles, hangar_skeletons) {
 
+                        // Create a floating-origin Entity
+                        // for the sun;
+                        // notice that we add the Entity to the OriginCamera,
+                        // and make the sphere parent of this Entity
+                        // for it to be updated every frame.
                         // Sun is located at world's origin
                         let entSun = new Entity("entSun", main._scene);
                         main._cameras[0].add(entSun);
                         let sun = BABYLON.CreateSphere("sun", {diameter:2048});
                         sun.parent = entSun;
+
+                        // create a material for the sun
                         let sunMat = new BABYLON.StandardMaterial("sun", main._scene);
                         sunMat.diffuseColor = BABYLON.Color3.Yellow();
                         sunMat.emissiveColor = BABYLON.Color3.Yellow();
                         sun.material = sunMat;
+
+                        // create a billboard for the sun flares
                         let sunBill = BABYLON.CreatePlane("sunBill", {size:64000});
                         sunBill.parent = entSun;
                         sunBill.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
@@ -274,6 +283,9 @@ export class Game {
                         sunBill.material = sunBillMat;
 
                         // Create an entity for the hangar
+                        // same thing: create the Entity,
+                        // add the Entity to our special OriginCamera,
+                        // then parent the object to the Entity.
                         let entHangar = new Entity("entHangar", main._scene);
                         main._cameras[0].add(entHangar);
                         entHangar.doublepos = main._hangarPos;
@@ -288,11 +300,7 @@ export class Game {
                         main._blinking.material = blinkMat;
 
 
-                        // Create a floating-origin Entity
-                        // for a big sphere which mimics a planet;
-                        // notice that we add the Entity to the OriginCamera,
-                        // and make the sphere parent of this Entity
-                        // for it to be updated every frame.
+                        // Create a "planet", which does the same Entity thing.
                         let entPlanet = new Entity("entPlanet", main._scene);
                         entPlanet.doublepos = main._planetPos;
                         main._cameras[0].add(entPlanet);
@@ -305,12 +313,14 @@ export class Game {
                         sphMat.roughness = 0.7;
                         sphere.material = sphMat;
 
-                        // Create other entities and
-                        // many instances of a little cube
+                        // Create many other entities and
+                        // many instances of an asteroid mesh
                         // to mimic an asteroid field;
-                        // notice that create one Entity for different regions
-                        // that are far apart, then we add some cubes to
+                        // notice that we create one Entity for different regions
+                        // that are far apart, then we add some asteroids to
                         // that same Entity before moving to a new one.
+                        // This way, each smaller region may have many objects
+                        // parented to the same Entity at that region.
                         let asteroid = ast_meshes[0].getChildMeshes()[0] as BABYLON.Mesh; //BABYLON.CreateSphere("asteroid", {segments:3, diameter:2});
                         asteroid.parent = null;
                         let astMat = new BABYLON.StandardMaterial("ast", main._scene);
@@ -323,7 +333,7 @@ export class Game {
                         asteroid.setEnabled(false);
 
                         for (let i = 0; i < 360; i += 15) {
-                            // entity for one region
+                            // entity for current region of space
                             let ent = new Entity("ent" + (i+2), main._scene);
 
                             // calculate the angle for the region
@@ -335,8 +345,12 @@ export class Game {
 
                             // add some cubes to that entity
                             for (let j = 0; j < 32; j++) {
+                                // create a new asteroid instance
                                 let inst = asteroid.createInstance("inst" + j);
+                                // parent it to the current Entity
                                 inst.parent = ent;
+
+                                // randomly scale, rotate and position the asteroid
                                 let s = 1 + Math.random() * 16;
                                 inst.scaling.set(s, s, s);
                                 inst.rotation = new BABYLON.Vector3(Math.random()*180, Math.random()*180, Math.random()*180);
