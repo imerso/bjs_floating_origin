@@ -80,6 +80,9 @@ export class Game {
     private _grounds: BABYLON.AbstractMesh[] = new Array<BABYLON.AbstractMesh>();
     private _planetPos: BABYLON.Vector3 = new BABYLON.Vector3(0, 0, 128000);
     private _hangarPos: BABYLON.Vector3 = this._planetPos.add(new BABYLON.Vector3(33500, 100, 0));
+    private _blinking: BABYLON.Mesh;
+    private _on: boolean;
+    private _frame: int = 0;
 
 
     // Initialization, gets canvas and creates engine
@@ -275,6 +278,15 @@ export class Game {
                         main._cameras[0].add(entHangar);
                         entHangar.doublepos = main._hangarPos;
                         hangar_meshes[0].parent = entHangar;
+                        // add a blinking red light
+                        main._blinking = BABYLON.CreateBox("blink", {width:5, height:64, depth:10});
+                        main._blinking.parent = entHangar;
+                        main._blinking.position.y = -33;
+                        let blinkMat = new BABYLON.StandardMaterial("sun", main._scene);
+                        blinkMat.diffuseColor =  BABYLON.Color3.Black();
+                        blinkMat.emissiveColor = BABYLON.Color3.Red();
+                        main._blinking.material = blinkMat;
+
 
                         // Create a floating-origin Entity
                         // for a big sphere which mimics a planet;
@@ -430,7 +442,20 @@ export class Game {
 
         // before rendering a new frame
         this._scene.registerBeforeRender(() => {
-            this._fps.innerHTML = this._engine.getFps().toFixed() + " fps";
+            let fps = this._engine.getFps();
+            this._fps.innerHTML = fps.toFixed() + " fps";
+
+            if (this._frame++ % 120 == 0) {
+                this._on = !this._on;
+                if (this._on)
+                {
+                    (this._blinking.material as BABYLON.StandardMaterial).emissiveColor = BABYLON.Color3.Red();
+                }
+                else
+                {
+                    (this._blinking.material as BABYLON.StandardMaterial).emissiveColor = BABYLON.Color3.Black();
+                }
+            }
         });
 
         // render loop
