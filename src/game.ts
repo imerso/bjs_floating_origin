@@ -26,7 +26,7 @@ import { Entity } from './etherea/entity';
 // them enabled and render at a lower resolution
 // to compensate.
 //
-let USE_DEBUG_LAYER: boolean = true;              // enable debug inspector?
+let USE_DEBUG_LAYER: boolean = false;              // enable debug inspector?
 let USE_CUSTOM_LOADINGSCREEN: boolean = false;    // enable custom loading screen?
 let HW_SCALE_NORMAL: float = 1;                  // scale in non-vr mode
 let HW_SCALE_VR: float = 1;                      // scale in vr mode
