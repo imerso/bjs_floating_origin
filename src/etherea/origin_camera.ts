@@ -30,6 +30,7 @@ export class OriginCamera extends BABYLON.UniversalCamera {
     public set doubletgt(tgt: BABYLON.Vector3) {
         this._doubletgt.copyFrom(tgt);
         this.setTarget(this._doubletgt.subtract(this._doublepos));
+        console.log("Updated target: " + this.doubletgt.x + ", " + this.doubletgt.y + ", " + this.doubletgt.z);
     }
 
     // Constructor

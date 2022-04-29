@@ -26,7 +26,7 @@ import { Entity } from './etherea/entity';
 // them enabled and render at a lower resolution
 // to compensate.
 //
-let USE_DEBUG_LAYER: boolean = true;              // enable debug inspector?
+let USE_DEBUG_LAYER: boolean = false;              // enable debug inspector?
 let USE_CUSTOM_LOADINGSCREEN: boolean = false;    // enable custom loading screen?
 let HW_SCALE_NORMAL: float = 1;                  // scale in non-vr mode
 let HW_SCALE_VR: float = 1;                      // scale in vr mode
@@ -78,6 +78,7 @@ export class Game {
     private _shadowgen: BABYLON.ShadowGenerator;
     private _xrhelper: BABYLON.WebXRDefaultExperience;
     private _grounds: BABYLON.AbstractMesh[] = new Array<BABYLON.AbstractMesh>();
+    private _hangarPos: BABYLON.Vector3 = new BABYLON.Vector3(33500, 100, 0);
 
 
     // Initialization, gets canvas and creates engine
@@ -110,11 +111,12 @@ export class Game {
         // initialize cameras array
         this._cameras = new Array<OriginCamera>();
 
-        let cam1 = new OriginCamera("cam1", new BABYLON.Vector3(0, 1500, -35000), this._scene);
-        cam1.doubletgt = new BABYLON.Vector3(20000, 1500, -15000);
+        let camPos = this._hangarPos.add(new BABYLON.Vector3(1, 1.7, 0));
+        let cam1 = new OriginCamera("cam1", camPos, this._scene);
+        cam1.doubletgt = camPos.add(new BABYLON.Vector3(-100, 0, -30));
         cam1.touchAngularSensibility = 10000;
         cam1.inertia = 0;
-        cam1.speed = 500;
+        cam1.speed = 1;
         cam1.keysUp.push(87);    		// W
         cam1.keysDown.push(83)   		// D
         cam1.keysLeft.push(65);  		// A
@@ -144,8 +146,8 @@ export class Game {
 
                         // force xr camera to specific position and rotation
                         // when we just entered xr mode
-                        this._scene.activeCamera.position.set(0, -66, -10);
-                        (this._scene.activeCamera as BABYLON.WebXRCamera).setTarget(new BABYLON.Vector3(0, -66, 0));
+                        //this._scene.activeCamera.position.set(0, -66, -10);
+                        //(this._scene.activeCamera as BABYLON.WebXRCamera).setTarget(new BABYLON.Vector3(0, -66, 0));
                     }
                 });
             }, (error) => {
@@ -206,11 +208,11 @@ export class Game {
 
                 // create some lights
                 main._light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), main._scene);
-                main._light1.intensity = 0.5;
+                main._light1.intensity = 0.75;
                 main._light1.specular = BABYLON.Color3.White();
 
                 // create shadows generator
-                main._light2 = new BABYLON.DirectionalLight("light2", new BABYLON.Vector3(0, -0.95, -0.75), main._scene);
+                main._light2 = new BABYLON.DirectionalLight("light2", new BABYLON.Vector3(0.6, -0.35, 0.85), main._scene);
                 if (USE_SHADOWS) {
                     main._shadowgen = new BABYLON.ShadowGenerator(1024, main._light2);
                     main._shadowgen.useBlurExponentialShadowMap = true;
@@ -219,73 +221,113 @@ export class Game {
 
                 // ==========================================
 
-                // Create a floating-origin Entity
-                // for a big sphere which mimics a planet;
-                // notice that we add the Entity to the OriginCamera,
-                // and make the sphere parent of this Entity
-                // for it to be updated every frame.
-                let ent1 = new Entity("ent1", main._scene);
-                main._cameras[0].add(ent1);
-                let sphere = BABYLON.CreateSphere("sph", {diameter:32768});
-                sphere.parent = ent1;
+                BABYLON.SceneLoader.ImportMesh("", "assets/models/", "asteroid.glb", main._scene, async function (ast_meshes, ast_particles, ast_skeletons) {
 
-                // Create other entities and
-                // many instances of a little cube
-                // to mimic an asteroid field;
-                // notice that create one Entity for different regions
-                // that are far apart, then we add some cubes to
-                // that same Entity before moving to a new one.
-                let mark = BABYLON.CreateBox("mark", {size:1});
-                mark.setEnabled(false);
-                for (let i = 0; i < 360; i += 15) {
-                    // entity for one region
-                    let ent = new Entity("ent" + i, main._scene);
+                    BABYLON.SceneLoader.ImportMesh("", "assets/models/", "hangar.glb", main._scene, async function (hangar_meshes, hangar_particles, hangar_skeletons) {
 
-                    // calculate the angle for the region
-                    let ang = i * Math.PI / 180;
+                        // Create an entity for the hangar
+                        let ent0 = new Entity("ent0", main._scene);
+                        main._cameras[0].add(ent0);
+                        ent0.doublepos.copyFrom(main._hangarPos);
+                        hangar_meshes[0].parent = ent0;
 
-                    // position the entity at that region
-                    ent.doublepos.set(33000 * Math.sin(ang), 0, 33000 * Math.cos(ang));
-                    main._cameras[0].add(ent);
+                        // Create a floating-origin Entity
+                        // for a big sphere which mimics a planet;
+                        // notice that we add the Entity to the OriginCamera,
+                        // and make the sphere parent of this Entity
+                        // for it to be updated every frame.
+                        let ent1 = new Entity("ent1", main._scene);
+                        main._cameras[0].add(ent1);
+                        let sphere = BABYLON.CreateSphere("sph", {diameter:32768});
+                        sphere.parent = ent1;
+                        let sphMat = new BABYLON.StandardMaterial("sph", main._scene);
+                        sphMat.diffuseTexture = new BABYLON.Texture("./assets/tex/saturn.jpg", main._scene);
+                        sphMat.specularPower = .5;
+                        sphMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+                        sphMat.roughness = 0.7;
+                        sphere.material = sphMat;
 
-                    // add some cubes to that entity
-                    for (let j = 0; j < 32; j++) {
-                        let inst = mark.createInstance("inst" + j);
-                        inst.parent = ent;
-                        let s = 10 + Math.random() * 54;
-                        inst.scaling.set(s, s, s);
-                        inst.rotation.set(s, s, s);
-                        inst.position.set(-4000 + Math.random() * 8000, -1000 + Math.random() * 2000, -4000 + Math.random() * 8000);
-                    }
-                }
+                        // Create other entities and
+                        // many instances of a little cube
+                        // to mimic an asteroid field;
+                        // notice that create one Entity for different regions
+                        // that are far apart, then we add some cubes to
+                        // that same Entity before moving to a new one.
+                        let asteroid = ast_meshes[0].getChildMeshes()[0] as BABYLON.Mesh; //BABYLON.CreateSphere("asteroid", {segments:3, diameter:2});
+                        //let positions = asteroid.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+                        //for (let i=0; i<positions.length; i++) positions[i] *= 1 + Math.random();
+                        //asteroid.setVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+                        let astMat = new BABYLON.StandardMaterial("ast", main._scene);
+                        astMat.diffuseTexture = new BABYLON.Texture("./assets/tex/asteroid.jpg", main._scene);
+                        (astMat.diffuseTexture as BABYLON.Texture).uScale = (astMat.diffuseTexture as BABYLON.Texture).vScale = 4;
+                        astMat.specularPower = 3;
+                        astMat.specularColor = new BABYLON.Color3(0.35, 0.35, 0.35);
+                        astMat.roughness = 0.9;
+                        asteroid.material = astMat;
+                        asteroid.setEnabled(false);
 
-                // ==========================================
+                        for (let i = 0; i < 360; i += 15) {
+                            // entity for one region
+                            let ent = new Entity("ent" + i, main._scene);
 
-                // ready to play
-                if (USE_DEBUG_LAYER) main._scene.debugLayer.show();
-                console.log("All resources loaded!");
+                            // calculate the angle for the region
+                            let ang = i * Math.PI / 180;
 
-                // enable user click to close loading screen
-                document.getElementById("frontdiv2").innerHTML = "<h2>CLICK TO START</h2>"
-                document.getElementById("frontdiv").style.cursor = "pointer";
+                            // position the entity at that region
+                            ent.doublepos.set(33000 * Math.sin(ang), 0, 33000 * Math.cos(ang));
+                            main._cameras[0].add(ent);
 
-                // when starting the game itself,
-                // we finally create a default xr experience
-                if (USE_CUSTOM_LOADINGSCREEN)
-                {
-                    // when using a custom loading, we will wait for the user to click,
-                    // so we can also automatically start the background music...
-                    document.getElementById("frontdiv").addEventListener("click", async function () {
-                        main.createDefaultXr();
-                        resolve(true);
+                            // add some cubes to that entity
+                            for (let j = 0; j < 32; j++) {
+                                let inst = asteroid.createInstance("inst" + j);
+                                inst.parent = ent;
+                                let s = 1 + Math.random() * 16;
+                                inst.scaling.set(s, s, s);
+                                inst.rotation.set(s, s, s);
+                                inst.position.set(-6000 + Math.random() * 12000, -4000 + Math.random() * 8000, -6000 + Math.random() * 12000);
+                            }
+                        }
+
+                        // change camera speed on mousewheel
+                        main._canvas.addEventListener("wheel", function(e) {
+                            main._cameras[0].speed = Math.min(1000, Math.max(1, main._cameras[0].speed += e.deltaY * 0.1));
+                        });
+
+                        // look at hangar on space press
+                        main._canvas.addEventListener("keydown", function(e) {
+                            console.log("Key [" + e.key + "]");
+                            if (e.key === " ") main._cameras[0].doubletgt = ent0.doublepos ;
+                        });
+
+                        // ==========================================
+
+                        // ready to play
+                        if (USE_DEBUG_LAYER) main._scene.debugLayer.show();
+                        console.log("All resources loaded!");
+
+                        // enable user click to close loading screen
+                        document.getElementById("frontdiv2").innerHTML = "<h2>CLICK TO START</h2>"
+                        document.getElementById("frontdiv").style.cursor = "pointer";
+
+                        // when starting the game itself,
+                        // we finally create a default xr experience
+                        if (USE_CUSTOM_LOADINGSCREEN)
+                        {
+                            // when using a custom loading, we will wait for the user to click,
+                            // so we can also automatically start the background music...
+                            document.getElementById("frontdiv").addEventListener("click", async function () {
+                                main.createDefaultXr();
+                                resolve(true);
+                            });
+                        }
+                        else
+                        {
+                            // just open the default xr env
+                            main.createDefaultXr();
+                            resolve(true);
+                        }
                     });
-                }
-                else
-                {
-                    // just open the default xr env
-                    main.createDefaultXr();
-                    resolve(true);
-                }
+                });
             });
     }
 

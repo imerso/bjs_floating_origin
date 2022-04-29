@@ -1,0 +1,5 @@
+Models are:
+
+Hangar from Ymcgi ( https://www.turbosquid.com/3d-models/3d-model-sci-fi-corridor-1481606 )
+Asteroid from Marco Lopiano ( https://www.turbosquid.com/3d-models/3d-asteroid/1051001# )
+Asteroid texture from FilterForge ( https://www.filterforge.com/filters/13302.jpg )
