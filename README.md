@@ -115,3 +115,5 @@ entSphere.doublepos = new BABYLON.Vector3(10000000, 0, 10000000);
 ```  
 
 The OriginCamera extends UniversalCamera, so you can use the same features of that.
+
+Check the game.ts file for the sun and planet example.
