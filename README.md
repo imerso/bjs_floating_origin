@@ -30,7 +30,7 @@ or
 npm run prod  
 (production build which will also obfuscate the build)
 
-## HOW FLOATING-POINT WORKS:
+## HOW FLOATING-ORIGIN WORKS:
 
 On traditional 3D rendering, objects will pass three stages until they're displayed on screen:
 
