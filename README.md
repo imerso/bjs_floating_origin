@@ -81,8 +81,8 @@ Normally, that would certainly caused jittering, because both objects are very f
 our trick, the jittering does not happen -- remember, we subtract camera double position from the object double position
 and then set the object real position at that offset, keeping the camera always at (0, 0, 0):
 
-Object Position: (10000000, 0, 10000000)
-Camera Position: (10000000, 0, 10000500)
+Object Position: (10000000, 0, 10000000)  
+Camera Position: (10000000, 0, 10000500)  
 Offset: (0, 0, -500)
 
 The offset is small enough to be absolutely precise even with only 32 bits floating-point. The GPU is very happy with that
