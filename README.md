@@ -108,7 +108,7 @@ So, let's say that we want a sphere with double precision:
 ```  
 let camera = new OriginCamera("camera", new BABYLON.Vector3(10000000, 0, 10000500), this._scene);  
 let entSphere = new Entity("entSphere", scene);  
-camera.add(entSun);  
+camera.add(entSphere);  
 let sphere = BABYLON.CreateSphere("sphere", {diameter:2048});  
 sphere.parent = entSphere;  
 entSphere.doublepos = new BABYLON.Vector3(10000000, 0, 10000000);  
