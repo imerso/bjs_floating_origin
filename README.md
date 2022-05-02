@@ -116,4 +116,11 @@ entSphere.doublepos = new BABYLON.Vector3(10000000, 0, 10000000);
 
 The OriginCamera extends UniversalCamera, so you can use the same features of that.
 
-Check the game.ts file for the sun and planet example.
+Finally, even on huge scenes you commonly will have objects spread into separate regions, so you 
+most probably would not need one Entity instance for each object. If you think carefully, you
+can have one Entity instance for each region of your scene, a region which does not extend for more
+than let's say 10,000 units to avoid imprecision again. Then, you can add many objects that are
+always in that region to just one Entity. Doing that, you can even move those objects by using
+their positions directly, as you would do normally. And still, no imprecision will be seen anymore.
+
+Check the game.ts file for the sun and planet example, plus asteroids clustering.
