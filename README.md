@@ -105,13 +105,13 @@ You must use its doublepos to set object position instead of position directly.
 
 So, let's say that we want a sphere with double precision:
 
-...
-let camera = new OriginCamera("camera", new BABYLON.Vector3(10000000, 0, 10000500), this._scene);
-let entSphere = new Entity("entSphere", scene);
-camera.add(entSun);
-let sphere = BABYLON.CreateSphere("sphere", {diameter:2048});
-sphere.parent = entSphere;
-entSphere.doublepos = new BABYLON.Vector3(10000000, 0, 10000000);
-...
+```  
+let camera = new OriginCamera("camera", new BABYLON.Vector3(10000000, 0, 10000500), this._scene);  
+let entSphere = new Entity("entSphere", scene);  
+camera.add(entSun);  
+let sphere = BABYLON.CreateSphere("sphere", {diameter:2048});  
+sphere.parent = entSphere;  
+entSphere.doublepos = new BABYLON.Vector3(10000000, 0, 10000000);  
+```  
 
 The OriginCamera extends UniversalCamera, so you can use the same features of that.
