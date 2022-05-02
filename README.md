@@ -30,7 +30,7 @@ or
 npm run prod  
 (production build which will also obfuscate the build)
 
-## HOW FLOATING-ORIGIN WORKS:
+## HOW FLOATING-ORIGIN WORKS
 
 On traditional 3D rendering, objects will pass three stages until they're displayed on screen:
 
@@ -91,3 +91,27 @@ and we don't see any jittering.
 We just need to set the object at (0, 0, -500) and it will have the same visual effect as if we used their real coordinates,
 but with no jittering.
 
+## HOW TO USE THIS SOLUTION
+
+If you decide to use floating-origin, all your objects will have to use the same trick,
+or your game won't work properly. You will need to create one instance of OriginCamera
+and at least one instance of Entity.
+
+OriginCamera is a special camera which has a separate position control stored as doublepos (and its target as doubletgt). 
+You must stop using position and target from camera, and use their double precision counterparts doublepos and doubletgt.
+
+All objects from scene must then be parented to a Entity instance. Entity also has doublepos property which is double precision coordinate. 
+You must use its doublepos to set object position instead of position directly.
+
+So, let's say that we want a sphere with double precision:
+
+...
+let camera = new OriginCamera("camera", new BABYLON.Vector3(10000000, 0, 10000500), this._scene);
+let entSphere = new Entity("entSphere", scene);
+camera.add(entSun);
+let sphere = BABYLON.CreateSphere("sphere", {diameter:2048});
+sphere.parent = entSphere;
+entSphere.doublepos = new BABYLON.Vector3(10000000, 0, 10000000);
+...
+
+The OriginCamera extends UniversalCamera, so you can use the same features of that.
